@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { DATA_DIR } from '../../src/config.js';
+import { nameOf } from '../../src/names.js';
 
 const DAY = 86400000;
 
@@ -148,6 +149,20 @@ export function promptSections(context = {}) {
 
     const maxChars = Math.max(300, Math.min(6000, Number(cfg.injectMaxChars) || 1800));
     const lines = [];
+    // 「对方」是谁：从被选中的记忆里找出现次数最多的 subject，再查昵称表
+    try {
+      const counts = new Map();
+      for (const item of picked) {
+        for (const id of (item.memory.subjects || [])) {
+          const key = String(id);
+          counts.set(key, (counts.get(key) || 0) + 1);
+        }
+      }
+      const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+      const nm = top ? nameOf(top) : '';
+      // 正文默认用「他」指对方；只有绑定了具体昵称时才补一行说明
+      if (nm && nm !== '他') lines.push(`（下文的「他」= ${nm}）`);
+    } catch { /* 没有昵称表就算了 */ }
     let used = 0;
     for (const line of renderMemoryLines(picked)) {
       if (used + line.length + 1 > maxChars) break;

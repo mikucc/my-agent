@@ -17,6 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { DATA_DIR } from './config.js';
+import { learn as learnName } from './names.js';
 
 const MESSAGES_DIR = path.join(DATA_DIR, 'messages');
 
@@ -104,6 +105,8 @@ export class ChatStore {
       atNames: (Array.isArray(atNames) ? atNames : []).map((n) => String(n ?? '')).filter(Boolean).slice(0, 20)
     };
     st.messages.push(entry);
+    // 顺手记住"QQ 号 → 昵称"：记忆/日记里提到"对方"时能对上号
+    try { learnName(entry.senderId, entry.senderName); } catch { /* ignore */ }
     this.#trim(st);
     saveChat(st);
     return entry;

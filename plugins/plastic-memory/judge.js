@@ -21,8 +21,8 @@ function clamp01(n) {
 }
 
 /**
- * 主语规范：记忆正文里统一用「我 / 对方」。
- * 模型多数时候会照做，这里是兜底：开头是 QQ 号 → 对方；开头是她自己的名字 → 我。
+ * 主语规范：记忆正文里统一用「我 / 他」。
+ * 模型多数时候会照做，这里是兜底：开头是 QQ 号 → 他；开头是她自己的名字 → 我。
  */
 export function normalizeSubject(content) {
   let s = String(content || '').trim();
@@ -40,7 +40,8 @@ export function normalizeSubject(content) {
       break;
     }
   }
-  s = s.replace(/^\d{4,15}[，,。:：\s]*/, '对方');
+  s = s.replace(/^对方[，,。:：\s]*/, '他');
+  s = s.replace(/^\d{4,15}[，,。:：\s]*/, '他');
   return s.trim();
 }
 
@@ -144,7 +145,7 @@ function extractionPrompt(cfg = {}) {
     values ? `这个角色珍视：\n${values}` : '',
     '',
     '写法要求：',
-    '- 主语规范：正文里用「我」指自己、「对方」指对话对象；不要把昵称、QQ 号写进正文（QQ 号放 subjects）。',
+    '- 主语规范：正文里用「我」指自己、「他」指对话对象；不要把昵称、QQ 号写进正文（QQ 号放 subjects）。',
     '- 一条只讲一件事；不要合并两件不相关的事。',
     '- 如果这条和「已有记忆」讲的是同一件事，不要新增：输出 "duplicateOf":"<那条的 id>"，不要给 content。',
     '- 情绪标签 emotionLabel 只能从这些词里选一个：平静 / 开心 / 气恼 / 委屈 / 难过 / 害羞 / 紧张 / 得意 / 心疼 / 无奈。',

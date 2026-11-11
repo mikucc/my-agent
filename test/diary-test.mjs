@@ -47,11 +47,31 @@ ok('没有日记时 latestDiary 返回 null', () => {
   assert.equal(diary.latestDiary(now), null);
 });
 
-ok('promptSections 注入最近一篇', () => {
+ok('promptSections 只注入一行摘要，不注入全文', () => {
   diary.setup({ config: () => ({ enabled: true, injectChars: 200 }), log: () => {}, registerTool: () => {} });
   const secs = diary.promptSections();
   assert.ok(secs.length >= 1);
-  assert.ok(String(secs[0].content).includes('日记'));
+  const text = String(secs[0].content);
+  assert.ok(text.includes('日记'));
+  assert.ok(!text.includes('---'), '不应该注入全文（全文里有分隔线）');
+  assert.ok(text.length <= 200, '摘要应该很短');
+});
+
+ok('写日记时给 summary → 优先用它', () => {
+  diary.writeDiary('很长很长的一篇正文，里面有很多细节。', { date: '2026-11-13', summary: '发图一直失败，气了一下午，晚上好转' });
+  assert.equal(diary.readSummary('2026-11-13'), '发图一直失败，气了一下午，晚上好转');
+});
+
+ok('没给 summary → 兜底摘取优先挑带情绪的句子', () => {
+  diary.writeDiary('今天什么都没干成。剧看了一下午还一直在快进。晚上的碗还在茶几上不想收。', { date: '2026-11-14' });
+  const s = diary.readSummary('2026-11-14');
+  assert.ok(s.length >= 20 && s.length <= 100, `长度 ${s.length}`);
+  assert.ok(/不想|气|烦|累|开心/.test(s), `应该带上情绪句：${s}`);
+});
+
+ok('摘要最多 100 字', () => {
+  const long = '很长的一句'.repeat(40);
+  assert.ok(diary.buildSummary(long).length <= 100);
 });
 
 fs.rmSync(tmp, { recursive: true, force: true });

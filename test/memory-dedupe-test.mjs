@@ -25,8 +25,12 @@ ok('不同的两件事 → 不判重', () => {
   assert.equal(isSameMemory('对方不喜欢被要求拍脚', '对方在公交车上拍了张糊掉的照片'), false);
 });
 
-ok('主语规范：开头是 QQ 号 → 对方', () => {
-  assert.equal(normalizeSubject('123456789 凌晨三点还没睡'), '对方凌晨三点还没睡');
+ok('主语规范：开头是 QQ 号 → 他', () => {
+  assert.equal(normalizeSubject('123456789 凌晨三点还没睡'), '他凌晨三点还没睡');
+});
+
+ok('主语规范：开头是「对方」→ 他', () => {
+  assert.equal(normalizeSubject('对方让我拍张照看看'), '他让我拍张照看看');
 });
 
 ok('主语规范：开头是她自己的名字 → 我', () => {
