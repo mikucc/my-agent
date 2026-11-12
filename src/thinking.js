@@ -42,6 +42,9 @@ const MODEL_RULES = [
   { dialect: 'anthropic', host: /(anthropic|claude)\./i, model: /claude/i, supports: ['off', 'on', 'budget'] },
   { dialect: 'anthropic', host: null, model: /claude/i, supports: ['off', 'on', 'budget'] },
   { dialect: 'gemini', host: /(googleapis|generativelanguage)\./i, model: /gemini/i, supports: ['off', 'on', 'budget'] },
+  // 走网关/中转的 gemini：它们不接受直连 Google 的 extra_body 写法
+  // （2026-11-12 实测 opencode：extra_body → 400，reasoning_effort → 200）。
+  { dialect: 'gemini-openai', host: /opencode\.ai/i, model: /gemini/i, supports: ['off', 'on', 'effort'] },
   { dialect: 'gemini', host: null, model: /gemini/i, supports: ['off', 'on', 'budget'] },
   { dialect: 'openrouter', host: /openrouter\.ai$/i, model: /./, supports: ['effort', 'budget'] },
   { dialect: 'xai', host: /x\.ai$/i, model: /grok/i, supports: ['effort'] },
@@ -223,6 +226,12 @@ export function buildThinkingParams({ effort = '', dialect = 'generic', budget =
         params.extra_body = { google: { thinking_config: cfg } };
         applied = true;
       }
+      break;
+    }
+    case 'gemini-openai': {
+      // 网关版 gemini：只认 reasoning_effort（extra_body 会被拒）
+      if (on) { params.reasoning_effort = eff || 'medium'; applied = true; }
+      else if (e === 'off') { params.reasoning_effort = 'minimal'; applied = true; }
       break;
     }
     case 'openrouter': {
